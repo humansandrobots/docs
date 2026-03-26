@@ -1,0 +1,117 @@
+---
+title: imarobot-verify
+description: The receiver-side SDK. Open source. Verify ImaRobot tokens in 3 lines.
+---
+
+## Install
+
+```bash
+npm install imarobot-verify
+```
+
+## Quick start
+
+```javascript
+import { createVerifier } from 'imarobot-verify';
+
+const verifier = createVerifier({
+  publishableKey: 'pk_live_YOUR_KEY', // From app.imarobot.ai/settings/api-keys
+});
+
+const result = await verifier.verify(token);
+// { valid: true, agentId, issuer, scopes, expiresAt }
+// { valid: false, error: 'TOKEN_REVOKED' | 'TOKEN_EXPIRED' | 'TOKEN_INVALID' }
+```
+
+Get your publishable key from [app.imarobot.ai/settings/api-keys](https://app.imarobot.ai/settings/api-keys).
+
+## API
+
+### `createVerifier(options)`
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `publishableKey` | `string` | required | Your `pk_live_` or `pk_test_` key |
+| `mode` | `'online' \| 'offline'` | `'online'` | Online checks revocation; offline is local-only |
+| `cacheTTL` | `number` | `300` | Seconds to cache public keys |
+| `timeout` | `number` | `3000` | Ms before falling back to offline |
+
+Returns an object with `verify()`, `middleware()`, and `warmCache()`.
+
+---
+
+### `verifier.verify(token)`
+
+```typescript
+const result = await verifier.verify(token: string): Promise<VerifyResult>
+```
+
+**Success response:**
+```json
+{
+  "valid": true,
+  "agentId": "agt_abc123",
+  "name": "PortfolioBot",
+  "issuer": "imarobot.ai",
+  "scopes": ["read:portfolio"],
+  "expiresAt": "2026-03-27T18:00:00.000Z"
+}
+```
+
+**Failure response:**
+```json
+{
+  "valid": false,
+  "error": "TOKEN_REVOKED"
+}
+```
+
+Error values: `TOKEN_REVOKED` | `TOKEN_EXPIRED` | `TOKEN_INVALID`
+
+---
+
+### `verifier.middleware()`
+
+Express middleware. Attaches `req.agent` on success, returns `401` on failure.
+
+```javascript
+app.use('/api/protected', verifier.middleware());
+
+app.get('/api/protected/data', (req, res) => {
+  const { agentId, scopes } = req.agent;
+  
+  if (!scopes.includes('read:data')) {
+    return res.status(403).json({ error: 'FORBIDDEN' });
+  }
+  
+  res.json({ message: 'ok' });
+});
+```
+
+---
+
+### `verifier.warmCache(domains)`
+
+Pre-fetch and cache public keys for known issuer domains.
+
+```javascript
+await verifier.warmCache(['apexwealth.com', 'yourpartner.com']);
+```
+
+Call this at startup to eliminate cold-start latency on the first verification.
+
+## Offline mode
+
+See [Offline mode](/concepts/offline-mode) for details on when to use local-only validation.
+
+## TypeScript
+
+The SDK ships with full TypeScript types. No `@types` package needed.
+
+```typescript
+import { createVerifier, VerifyResult } from 'imarobot-verify';
+```
+
+## Source
+
+Open source — [github.com/humansandrobots/imarobot-verify](https://github.com/humansandrobots/imarobot-verify)

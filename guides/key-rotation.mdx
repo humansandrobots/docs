@@ -1,0 +1,56 @@
+---
+title: Key rotation
+description: Rotate agent credentials without downtime.
+---
+
+Rotate agent credentials periodically or immediately after a suspected compromise.
+
+## Zero-downtime rotation
+
+```javascript
+import { ImaRobotAgent } from 'imarobot-agent';
+
+const client = new ImaRobotAgent({
+  apiKey: process.env.IMAROBOT_API_KEY,
+  privateKeyPem: process.env.IMAROBOT_PRIVATE_KEY,
+});
+
+// 1. Register new agent (old agent still active)
+const newAgent = await client.registerAgent({
+  name: 'PortfolioBot',
+  issuerDomain: 'apexwealth.com',
+  scopes: ['read:portfolio'],
+});
+
+// 2. Update your process to use the new token
+process.env.IMAROBOT_TOKEN = newAgent.token;
+
+// 3. Revoke the old agent
+await client.revokeAgent(oldAgentId, { reason: 'Scheduled rotation' });
+```
+
+Or use the one-call shorthand:
+
+```javascript
+const newAgent = await client.rotateAgent(oldAgentId, { expiryDays: 30 });
+```
+
+## Emergency revocation
+
+If a token is compromised, revoke immediately:
+
+```bash
+curl -X POST https://api.imarobot.ai/v1/agents/agt_abc123/revoke \
+  -H "Authorization: Bearer sk_live_YOUR_KEY" \
+  -d '{ "reason": "Suspected compromise" }'
+```
+
+Revocation is effective within milliseconds. All in-flight requests using the revoked token will fail the next verification check.
+
+## Rotation schedule recommendations
+
+| Risk level | Rotation frequency |
+|---|---|
+| High (financial, healthcare) | Every 24 hours |
+| Medium (internal APIs) | Every 7-30 days |
+| Low (read-only, non-sensitive) | Every 90 days |

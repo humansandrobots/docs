@@ -1,0 +1,78 @@
+---
+title: How it works
+description: The three-step flow — issue, verify, revoke.
+---
+
+## The problem
+
+AI agents are calling external APIs. Those APIs have no reliable way to answer: "Is this agent who it claims to be, and is it still authorized to act?"
+
+Existing tools solve identity *inside* an organization. ImaRobot solves identity *across* organizational boundaries — the cross-boundary delegated authority layer that IAM tools don't cover.
+
+## The flow
+
+```
+Issuer (agent owner)          ImaRobot              Receiver (your API)
+─────────────────────         ────────              ──────────────────
+POST /v1/agents/register  →   Issues RS256 JWT  →   Agent presents token
+                               with scopes,          GET /v1/verify/{token}
+                               expiry, agent_id  ←   { valid, scopes, ... }
+```
+
+**Three parties:**
+
+| Role | Description | Example |
+|---|---|---|
+| **Issuer** | The org that owns and registers the agent | Apex Wealth Management |
+| **ImaRobot** | Issues, tracks, and verifies agent identity | imarobot.ai |
+| **Receiver** | The API that the agent calls — verifies the token | Plaid, Stripe, your API |
+
+## What the token contains
+
+ImaRobot tokens are standard RS256 JWTs. The payload contains:
+
+```json
+{
+  "sub": "agt_abc123",
+  "iss": "imarobot.ai",
+  "iat": 1711234567,
+  "exp": 1711320967,
+  "agent": {
+    "name": "PortfolioBot",
+    "issuer": "apexwealth.com",
+    "scopes": ["read:portfolio", "read:transactions"],
+    "description": "Reads portfolio data from financial APIs"
+  }
+}
+```
+
+The token is signed with ImaRobot's RS256 private key. The corresponding public key is available at `https://api.imarobot.ai/.well-known/public-key.pem` for offline validation.
+
+## What verification returns
+
+```json
+{
+  "valid": true,
+  "agent_id": "agt_abc123",
+  "name": "PortfolioBot",
+  "issuer": "imarobot.ai",
+  "scopes": ["read:portfolio", "read:transactions"],
+  "expires_at": "2026-03-27T18:00:00.000Z",
+  "verified_at": "2026-03-26T18:00:01.234Z"
+}
+```
+
+Or on failure:
+
+```json
+{
+  "valid": false,
+  "error": "TOKEN_REVOKED" | "TOKEN_EXPIRED" | "TOKEN_INVALID"
+}
+```
+
+## What ImaRobot doesn't do
+
+- **Doesn't proxy traffic** — verification is a single API call, not a traffic middleman. If ImaRobot is unreachable, agents can fall back to offline JWT validation.
+- **Doesn't hold private keys** — issuers hold their own private keys. ImaRobot holds the public key and revocation registry. Compromising ImaRobot cannot forge tokens.
+- **Doesn't manage user identity** — ImaRobot is for machine agents, not human users. Use Clerk, Auth0, or similar for human auth.

@@ -1,11 +1,11 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "ImaRobot",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#00E5C8",
+    "light": "#00E5C8",
+    "dark": "#00B8A0"
   },
   "favicon": "/favicon.svg",
   "navigation": {
@@ -17,32 +17,32 @@
             "group": "Getting started",
             "pages": [
               "index",
-              "quickstart",
-              "development"
+              "quickstart"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Core concepts",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "concepts/how-it-works",
+              "concepts/token-lifecycle",
+              "concepts/scopes",
+              "concepts/offline-mode"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "SDKs",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "sdks/verify",
+              "sdks/agent"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Guides",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "guides/register-first-agent",
+              "guides/express-middleware",
+              "guides/key-rotation",
+              "guides/design-partners"
             ]
           }
         ]
@@ -51,18 +51,33 @@
         "tab": "API reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Overview",
             "pages": [
-              "api-reference/introduction"
+              "api-reference/introduction",
+              "api-reference/authentication",
+              "api-reference/errors"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Agents",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api-reference/agents/register",
+              "api-reference/agents/list",
+              "api-reference/agents/get",
+              "api-reference/agents/issue-token",
+              "api-reference/agents/revoke"
+            ]
+          },
+          {
+            "group": "Verification",
+            "pages": [
+              "api-reference/verify"
+            ]
+          },
+          {
+            "group": "Log",
+            "pages": [
+              "api-reference/log"
             ]
           }
         ]
@@ -71,14 +86,19 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
+          "anchor": "Dashboard",
+          "href": "https://app.imarobot.ai",
+          "icon": "gauge"
         },
         {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
+          "anchor": "GitHub",
+          "href": "https://github.com/humansandrobots",
+          "icon": "github"
+        },
+        {
+          "anchor": "Support",
+          "href": "mailto:rafi@humansandrobots.ai",
+          "icon": "envelope"
         }
       ]
     }
@@ -90,33 +110,23 @@
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "label": "imarobot.ai",
+        "href": "https://imarobot.ai"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "label": "Get started",
+      "href": "https://app.imarobot.ai/signup"
     }
   },
   "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
+    "options": ["copy", "view", "chatgpt", "claude", "mcp", "cursor", "vscode"]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "x": "https://x.com/imarobot",
+      "github": "https://github.com/humansandrobots"
     }
   }
 }

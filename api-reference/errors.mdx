@@ -1,0 +1,51 @@
+---
+title: Errors
+description: All error codes and when they occur.
+---
+
+All errors return a consistent JSON structure:
+
+```json
+{
+  "error": {
+    "code": "AGENT_NOT_FOUND",
+    "message": "No agent found with the specified ID.",
+    "request_id": "req_abc123",
+    "docs_url": "https://docs.imarobot.ai/errors/AGENT_NOT_FOUND"
+  }
+}
+```
+
+## Error codes
+
+| Code | HTTP | When |
+|---|---|---|
+| `UNAUTHORIZED` | 401 | Missing or invalid API key or JWT |
+| `FORBIDDEN` | 403 | Valid auth but insufficient permissions |
+| `AGENT_NOT_FOUND` | 404 | Agent ID does not exist |
+| `TOKEN_INVALID` | 422 | Token present but fails cryptographic validation |
+| `TOKEN_EXPIRED` | 422 | Token signature valid but expiry has passed |
+| `TOKEN_REVOKED` | 422 | Token valid but agent has been revoked |
+| `RATE_LIMIT_EXCEEDED` | 429 | Caller exceeded their rate limit tier |
+| `VALIDATION_ERROR` | 400 | Request body missing required fields or malformed |
+| `INTERNAL_ERROR` | 500 | Unexpected server error — always logged, never exposes stack traces |
+
+## Handling errors
+
+```javascript
+const result = await verifier.verify(token);
+
+if (!result.valid) {
+  switch (result.error) {
+    case 'TOKEN_REVOKED':
+      // Agent has been explicitly revoked — reject permanently
+      return res.status(403).json({ error: 'Agent revoked' });
+    case 'TOKEN_EXPIRED':
+      // Token expired — agent should issue a new one
+      return res.status(401).json({ error: 'Token expired' });
+    case 'TOKEN_INVALID':
+      // Malformed or tampered token — reject
+      return res.status(401).json({ error: 'Invalid token' });
+  }
+}
+```

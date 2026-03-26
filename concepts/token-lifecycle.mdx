@@ -1,0 +1,68 @@
+---
+title: Token lifecycle
+description: How tokens are issued, expire, and get revoked.
+---
+
+## Lifecycle states
+
+```
+registered → active → expired
+                ↓
+             revoked
+```
+
+| State | Description |
+|---|---|
+| **active** | Token is valid and will pass verification |
+| **expired** | Token's `exp` timestamp has passed — returns `TOKEN_EXPIRED` |
+| **revoked** | Explicitly revoked via `POST /v1/agents/:id/revoke` — returns `TOKEN_REVOKED` |
+
+## Expiry
+
+Default token expiry is **24 hours** from issuance. Configurable at registration:
+
+```bash
+curl -X POST https://api.imarobot.ai/v1/agents/register \
+  -H "Authorization: Bearer sk_test_..." \
+  -d '{
+    "name": "LongLivedAgent",
+    "issuer_domain": "yourdomain.com",
+    "scopes": ["read:data"],
+    "expiry_seconds": 2592000
+  }'
+```
+
+| Plan | Max expiry |
+|---|---|
+| Free | 24 hours |
+| Developer | 90 days |
+| Growth | 90 days |
+| Enterprise | 1 year |
+
+## Revocation
+
+Revocation is **immediate**. Once revoked, the next verification call returns `TOKEN_REVOKED` — no delay, no cache.
+
+```bash
+curl -X POST https://api.imarobot.ai/v1/agents/agt_abc123/revoke \
+  -H "Authorization: Bearer sk_test_..." \
+  -d '{ "reason": "Credential rotation" }'
+```
+
+Revocation is permanent. A revoked agent cannot be un-revoked — register a new agent instead.
+
+## Offline validation
+
+In [offline mode](/concepts/offline-mode), revocation is not checked. The token is validated cryptographically against the cached public key. A revoked agent may still pass offline validation until the cache refreshes.
+
+**Use online mode for high-risk actions. Use offline mode for high-volume, low-risk actions where sub-millisecond latency matters.**
+
+## Token rotation
+
+To rotate an agent's credentials:
+
+1. Register a new agent — get a new `agent_id` and token
+2. Update your agent process to use the new token
+3. Revoke the old agent
+
+The Agent SDK's `rotateAgent()` method does all three steps in one call.

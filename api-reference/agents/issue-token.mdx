@@ -1,0 +1,30 @@
+---
+title: Issue a token
+description: POST /v1/agents/:id/issue-token
+---
+
+Issue a new token for an existing agent.
+
+## Request
+
+```bash
+POST /v1/agents/:id/issue-token
+Authorization: Bearer sk_live_YOUR_KEY
+```
+
+No request body required.
+
+## Response
+
+```json
+{
+  "agent_id": "agt_abc123",
+  "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expires_at": "2026-03-27T18:00:00.000Z",
+  "verify_url": "https://api.imarobot.ai/v1/verify/eyJ..."
+}
+```
+
+<Warning>
+The `token` is shown **exactly once**. Store it securely.
+</Warning>

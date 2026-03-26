@@ -1,0 +1,84 @@
+---
+title: Express middleware
+description: Protect Express routes with ImaRobot token verification.
+---
+
+## Install
+
+```bash
+npm install imarobot-verify
+```
+
+## Basic usage
+
+```javascript
+import express from 'express';
+import { createVerifier } from 'imarobot-verify';
+
+const app = express();
+
+const verifier = createVerifier({
+  publishableKey: process.env.IMAROBOT_PUBLISHABLE_KEY,
+});
+
+// Protect all routes under /api
+app.use('/api', verifier.middleware());
+
+app.get('/api/accounts', (req, res) => {
+  const { agentId, scopes } = req.agent;
+  res.json({ agentId, scopes });
+});
+```
+
+Get your publishable key from [app.imarobot.ai/settings/api-keys](https://app.imarobot.ai/settings/api-keys).
+
+## Scope enforcement
+
+The middleware validates the token but **does not enforce scopes** — that's your responsibility:
+
+```javascript
+app.get('/api/accounts', verifier.middleware(), (req, res) => {
+  if (!req.agent.scopes.includes('read:accounts')) {
+    return res.status(403).json({ error: 'FORBIDDEN' });
+  }
+  // ...
+});
+```
+
+## Error responses
+
+The middleware returns `401` on missing or invalid tokens:
+
+```json
+{
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Missing Authorization header.",
+    "request_id": "req_abc123"
+  }
+}
+```
+
+## The `req.agent` object
+
+On success, the middleware attaches:
+
+```typescript
+req.agent = {
+  agentId: string,
+  name: string,
+  issuer: string,
+  scopes: string[],
+  expiresAt: string,
+}
+```
+
+## Selective route protection
+
+```javascript
+// Public route — no auth
+app.get('/health', (req, res) => res.json({ ok: true }));
+
+// Protected route — requires valid ImaRobot token
+app.get('/api/data', verifier.middleware(), handler);
+```

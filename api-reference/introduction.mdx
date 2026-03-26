@@ -1,33 +1,75 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: API overview
+description: Base URL, versioning, and conventions.
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+## Base URL
 
-## Welcome
+```
+https://api.imarobot.ai
+```
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
-
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+All endpoints are versioned under `/v1/`. The `/health` endpoint is unversioned.
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+All endpoints except `/health` and `GET /v1/verify/:token` require a Bearer token:
+
+```bash
+Authorization: Bearer sk_live_YOUR_KEY
+```
+
+See [Authentication](/api-reference/authentication) for key types and scopes.
+
+## Rate limits
+
+Every response includes rate limit headers:
+
+```
+X-RateLimit-Limit: 5000
+X-RateLimit-Remaining: 4847
+X-RateLimit-Reset: 1711234567
+```
+
+| Plan | Verify endpoint | All other endpoints |
+|---|---|---|
+| Unauthenticated | 100 req/min | 20 req/min |
+| Free | 500 req/min | 60 req/min |
+| Developer | 5,000 req/min | 500 req/min |
+| Growth | 50,000 req/min | 2,000 req/min |
+| Enterprise | Custom | Custom |
+
+Exceeded limits return `429` with the standard error schema.
+
+## Error format
+
+All errors follow a consistent schema:
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
+{
+  "error": {
+    "code": "AGENT_NOT_FOUND",
+    "message": "No agent found with the specified ID.",
+    "request_id": "req_abc123",
+    "docs_url": "https://docs.imarobot.ai/errors/AGENT_NOT_FOUND"
   }
-]
+}
 ```
+
+See [Errors](/api-reference/errors) for the full list of error codes.
+
+## Health check
+
+```bash
+GET /health
+```
+
+```json
+{
+  "status": "ok",
+  "version": "1.0.0",
+  "timestamp": "2026-03-26T18:00:00.000Z"
+}
+```
+
+No authentication required. Use this for uptime monitoring and receiver connectivity checks.

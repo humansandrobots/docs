@@ -1,0 +1,51 @@
+---
+title: Verification log
+description: GET /v1/log
+---
+
+Retrieve the tamper-evident audit log of all verification events for your organization.
+
+## Request
+
+```bash
+GET /v1/log?limit=50&cursor=<cursor>&agent_id=<id>&result=valid
+Authorization: Bearer sk_live_YOUR_KEY
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `limit` | number | 50 | Max: 200 |
+| `cursor` | string | — | Opaque pagination cursor from previous response |
+| `agent_id` | string | — | Filter to one agent's events |
+| `result` | string | — | Filter: `valid` \| `invalid` \| `expired` \| `revoked` |
+
+## Response
+
+```json
+{
+  "data": [
+    {
+      "id": "log_xyz789",
+      "agent_id": "agt_abc123",
+      "result": "valid",
+      "latency_ms": 23,
+      "requested_at": "2026-03-26T18:00:01.234Z"
+    },
+    {
+      "id": "log_xyz788",
+      "agent_id": "agt_abc123",
+      "result": "revoked",
+      "failure_reason": "Agent revoked",
+      "latency_ms": 18,
+      "requested_at": "2026-03-26T17:59:44.100Z"
+    }
+  ],
+  "pagination": {
+    "cursor": "eyJpZCI6ImxvZ194eXo3ODgiLCJyZXF1ZXN0ZWRfYXQiOiIyMDI2LTAzLTI2VDE3OjU5OjQ0LjEwMFoifQ==",
+    "hasMore": true,
+    "total": 1482
+  }
+}
+```
+
+The log is append-only — records are never modified or deleted.

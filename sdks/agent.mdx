@@ -1,0 +1,130 @@
+---
+title: imarobot-agent
+description: The issuer-side SDK. Register, manage, and rotate agents from your codebase.
+---
+
+<Note>
+Available on Developer plan and above. [Upgrade at app.imarobot.ai](https://app.imarobot.ai).
+</Note>
+
+## Install
+
+```bash
+npm install imarobot-agent
+```
+
+## Quick start
+
+```javascript
+import { ImaRobotAgent } from 'imarobot-agent';
+import fs from 'fs';
+
+const client = new ImaRobotAgent({
+  apiKey: 'sk_live_YOUR_KEY',
+  privateKeyPem: fs.readFileSync('./keys/private.pem', 'utf8'),
+});
+
+// Register an agent
+const agent = await client.registerAgent({
+  name: 'PortfolioBot',
+  issuerDomain: 'apexwealth.com',
+  scopes: ['read:portfolio', 'read:transactions'],
+});
+
+// Issue a token
+const { token } = await client.issueToken(agent.agentId);
+
+// Use token to call a receiver API...
+
+// Revoke when done
+await client.revokeAgent(agent.agentId, { reason: 'Session complete' });
+```
+
+## Generate a key pair
+
+The SDK includes a CLI helper so you don't need to touch OpenSSL:
+
+```bash
+npx imarobot-agent generate-keys --output ./keys
+# Writes: ./keys/private.pem and ./keys/public.pem
+```
+
+- **Private key** — keep secret. Used by your agent process to sign requests.
+- **Public key** — upload to ImaRobot during `registerAgent()`. Safe to commit.
+
+## API
+
+### `new ImaRobotAgent(options)`
+
+| Option | Type | Required | Description |
+|---|---|---|---|
+| `apiKey` | `string` | ✓ | Your `sk_live_` or `sk_test_` API key |
+| `privateKeyPem` | `string` | ✓ | RS256 private key PEM string |
+| `baseUrl` | `string` | — | Default: `https://api.imarobot.ai` |
+
+---
+
+### `client.registerAgent(options)`
+
+```typescript
+const agent = await client.registerAgent({
+  name: string,           // Required — human-readable name
+  issuerDomain: string,   // Required — your domain (e.g. 'apexwealth.com')
+  scopes: string[],       // Required — what this agent can do
+  description?: string,   // Optional
+  expiryDays?: number,    // Default: 1. Max: 90 (Enterprise: 365)
+})
+```
+
+Returns: `{ agentId, name, status, expiresAt }`
+
+---
+
+### `client.issueToken(agentId)`
+
+```typescript
+const { token, expiresAt } = await client.issueToken(agentId: string)
+```
+
+Issues a fresh token for an existing agent. The token embeds all scopes and expiry from registration.
+
+---
+
+### `client.revokeAgent(agentId, options?)`
+
+```typescript
+await client.revokeAgent(agentId: string, { reason?: string })
+```
+
+Revokes immediately. Subsequent verifications return `TOKEN_REVOKED`.
+
+---
+
+### `client.rotateAgent(agentId, options?)`
+
+Revoke + re-register in one call. Returns the new agent.
+
+```typescript
+const newAgent = await client.rotateAgent(agentId: string, {
+  expiryDays?: number,
+  scopes?: string[], // Optional — update scopes on rotation
+})
+```
+
+---
+
+### `client.listAgents(options?)`
+
+```typescript
+const { agents } = await client.listAgents({
+  status?: 'active' | 'revoked' | 'expired',
+  limit?: number,   // Default: 50
+  cursor?: string,
+})
+```
+
+## TypeScript
+
+```typescript
+import { ImaRobotAgent, Agent, VerifyResult } from 'imarobot-agent';
+```

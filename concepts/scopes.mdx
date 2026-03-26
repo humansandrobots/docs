@@ -1,0 +1,47 @@
+---
+title: Scopes
+description: Declare what an agent is allowed to do.
+---
+
+## What scopes are
+
+Scopes are strings declared at registration that describe what an agent is authorized to do. They're embedded in the token and returned by the verify endpoint. **ImaRobot does not enforce scopes** — that's the receiver's job. ImaRobot makes the scopes visible and verifiable.
+
+## Format
+
+Scopes are free-form strings. We recommend the `action:resource` convention:
+
+```json
+["read:portfolio", "read:transactions", "write:orders"]
+```
+
+But any string is valid — use whatever makes sense for your domain.
+
+## How receivers use scopes
+
+```javascript
+const result = await verifier.verify(token);
+
+if (!result.valid) {
+  return res.status(401).json({ error: result.error });
+}
+
+if (!result.scopes.includes('read:accounts')) {
+  return res.status(403).json({ error: 'FORBIDDEN' });
+}
+
+// Proceed with request
+```
+
+## Scope examples by domain
+
+| Domain | Example scopes |
+|---|---|
+| Financial data | `read:portfolio`, `read:transactions`, `write:orders` |
+| Infrastructure | `deploy:production`, `read:logs`, `manage:dns` |
+| Customer data | `read:profile`, `write:preferences` |
+| Internal tools | `read:reports`, `submit:expense`, `approve:pr` |
+
+## Scope changes
+
+Scopes are fixed at registration. To change an agent's scopes, revoke it and register a new agent with the updated scope list.

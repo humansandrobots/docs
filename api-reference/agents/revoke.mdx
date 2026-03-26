@@ -1,0 +1,37 @@
+---
+title: Revoke an agent
+description: POST /v1/agents/:id/revoke
+---
+
+Revoke an agent immediately. Subsequent verifications return `TOKEN_REVOKED`.
+
+## Request
+
+```bash
+POST /v1/agents/:id/revoke
+Authorization: Bearer sk_live_YOUR_KEY
+Content-Type: application/json
+```
+
+```json
+{
+  "reason": "Credential rotation"
+}
+```
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `reason` | string | — | Optional. Stored in the audit log. |
+
+## Response
+
+```json
+{
+  "revoked": true,
+  "agent_id": "agt_abc123",
+  "revoked_at": "2026-03-26T18:00:00.000Z",
+  "reason": "Credential rotation"
+}
+```
+
+Revocation is **permanent** and **immediate**. A revoked agent cannot be un-revoked — register a new agent instead.

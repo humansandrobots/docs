@@ -1,0 +1,64 @@
+---
+title: Verify a token
+description: GET /v1/verify/:token
+---
+
+Verify an ImaRobot token. Returns the agent's identity, scopes, and validity status. No authentication required — use your publishable key (`pk_live_`) for receiver-side verification.
+
+## Request
+
+```bash
+GET /v1/verify/:token
+```
+
+No request body. The token is passed as a URL path parameter.
+
+## Response
+
+**Valid token:**
+
+```json
+{
+  "valid": true,
+  "agent_id": "agt_abc123",
+  "name": "PortfolioBot",
+  "issuer": "imarobot.ai",
+  "scopes": ["read:portfolio", "read:transactions"],
+  "description": "Reads portfolio data from financial APIs",
+  "issued_at": "2026-03-26T18:00:00.000Z",
+  "expires_at": "2026-03-27T18:00:00.000Z",
+  "verified_at": "2026-03-26T18:00:01.234Z"
+}
+```
+
+**Invalid token:**
+
+```json
+{
+  "valid": false,
+  "error": "TOKEN_REVOKED"
+}
+```
+
+Error values: `TOKEN_REVOKED` | `TOKEN_EXPIRED` | `TOKEN_INVALID`
+
+## CORS
+
+`GET /v1/verify/:token` allows all origins (`*`). Call it from any backend.
+
+## Example
+
+```bash
+curl https://api.imarobot.ai/v1/verify/eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+## Using the SDK
+
+```javascript
+import { createVerifier } from 'imarobot-verify';
+
+const verifier = createVerifier({ publishableKey: 'pk_live_...' });
+const result = await verifier.verify(token);
+```
+
+See [imarobot-verify SDK](/sdks/verify) for full SDK docs including Express middleware.

@@ -1,0 +1,72 @@
+---
+title: Register your first agent
+description: Step-by-step guide to registering an agent and issuing its first token.
+---
+
+## Prerequisites
+
+- An ImaRobot account ([sign up free](https://app.imarobot.ai/signup))
+- A `sk_test_` API key from [app.imarobot.ai/settings/api-keys](https://app.imarobot.ai/settings/api-keys)
+
+## 1. Open the Agents page
+
+Navigate to [app.imarobot.ai/agents](https://app.imarobot.ai/agents) and click **Register Agent**.
+
+## 2. Fill in the details
+
+| Field | Example | Notes |
+|---|---|---|
+| Name | `PortfolioBot` | Human-readable, shows in verification responses |
+| Issuer domain | `apexwealth.com` | Your domain — embedded in the token |
+| Scopes | `read:portfolio, read:transactions` | Comma-separated. Free-form strings. |
+| Description | `Reads portfolio data from Plaid` | Optional but recommended |
+
+## 3. Copy the token
+
+After clicking **Register**, you'll see the token **exactly once**. Copy it immediately — it cannot be recovered.
+
+```
+eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+Store it as an environment variable in your agent process:
+
+```bash
+IMAROBOT_TOKEN=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+## 4. Test the verify endpoint
+
+```bash
+curl https://api.imarobot.ai/v1/verify/$IMAROBOT_TOKEN
+```
+
+You should see:
+
+```json
+{
+  "valid": true,
+  "agent_id": "agt_abc123",
+  "name": "PortfolioBot",
+  ...
+}
+```
+
+## 5. Add the token to your agent's outbound requests
+
+Your agent should pass the token as a Bearer token when calling receiver APIs:
+
+```javascript
+const response = await fetch('https://receiver-api.com/data', {
+  headers: {
+    'Authorization': `Bearer ${process.env.IMAROBOT_TOKEN}`,
+  },
+});
+```
+
+The receiver calls `GET /v1/verify/{token}` to validate it. See [imarobot-verify SDK](/sdks/verify) for receiver-side integration.
+
+## Next steps
+
+- [Set up Express middleware](/guides/express-middleware) on your receiver API
+- [Rotate credentials](/guides/key-rotation) on a regular schedule

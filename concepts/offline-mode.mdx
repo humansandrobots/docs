@@ -1,0 +1,61 @@
+---
+title: Offline mode
+description: Validate tokens cryptographically without a network call.
+---
+
+## What it is
+
+In offline mode, the Verify SDK validates a token's RS256 signature against the issuer's cached public key — without calling the ImaRobot API. No network required.
+
+## When to use it
+
+| Mode | Use when | Revocation checked |
+|---|---|---|
+| **Online** (default) | High-risk actions, financial data, privileged ops | ✅ Yes |
+| **Offline** | High-volume, low-risk, latency-sensitive | ❌ No |
+
+<Warning>
+Offline mode means a revoked agent may still pass validation until the public key cache refreshes. Use online mode for any action where acting on a revoked agent would cause real harm.
+</Warning>
+
+## How it works
+
+1. On first verification, the SDK fetches and caches the issuer's public key from `https://api.imarobot.ai/.well-known/public-key.pem`
+2. On subsequent calls, the JWT signature is verified locally against the cached key
+3. Expiry (`exp` claim) is checked locally
+4. Cache TTL is configurable (default: 300 seconds)
+
+## Usage
+
+```javascript
+import { createVerifier } from 'imarobot-verify';
+
+const verifier = createVerifier({
+  publishableKey: 'pk_live_...',
+  mode: 'offline',
+  cacheTTL: 300, // seconds
+});
+
+const result = await verifier.verify(token);
+// No network call — pure local validation
+```
+
+## Fallback behavior
+
+The SDK also falls back to offline mode automatically when the ImaRobot API is unreachable (timeout exceeded). This ensures your API stays available even if ImaRobot has an outage.
+
+```javascript
+const verifier = createVerifier({
+  publishableKey: 'pk_live_...',
+  mode: 'online',   // Prefer online
+  timeout: 3000,    // Fall back to offline after 3s
+});
+```
+
+## Warming the cache
+
+Pre-fetch public keys before traffic arrives:
+
+```javascript
+await verifier.warmCache(['apexwealth.com', 'rippling.com']);
+```

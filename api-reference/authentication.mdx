@@ -1,0 +1,39 @@
+---
+title: Authentication
+description: API key types, scopes, and how to authenticate.
+---
+
+## Key types
+
+| Prefix | Type | Use |
+|---|---|---|
+| `sk_live_` | Live secret key | Full access — production use |
+| `sk_test_` | Test secret key | Full access — requests logged separately, not billed |
+| `pk_live_` | Publishable key | Verify endpoint only — safe to embed in receiver code |
+
+Get your keys at [app.imarobot.ai/settings/api-keys](https://app.imarobot.ai/settings/api-keys).
+
+## Usage
+
+Pass your key as a Bearer token in the `Authorization` header:
+
+```bash
+curl https://api.imarobot.ai/v1/agents \
+  -H "Authorization: Bearer sk_test_YOUR_KEY"
+```
+
+## Key security
+
+- API keys are stored as SHA-256 hashes — they cannot be recovered if lost
+- The full key is shown **exactly once** at creation time
+- If you lose a key, revoke it and create a new one
+- Never commit keys to source control — use environment variables
+
+## Publishable keys
+
+Publishable keys (`pk_live_`) can only call `GET /v1/verify/:token`. They're safe to include in receiver-side code because they cannot register agents, issue tokens, or access any management endpoints.
+
+```javascript
+// Safe to ship in your codebase
+const verifier = createVerifier({ publishableKey: 'pk_live_...' });
+```

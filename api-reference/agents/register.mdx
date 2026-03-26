@@ -1,0 +1,51 @@
+---
+title: Register an agent
+description: POST /v1/agents/register
+---
+
+Register a new agent and issue its first token.
+
+## Request
+
+```bash
+POST /v1/agents/register
+Authorization: Bearer sk_live_YOUR_KEY
+Content-Type: application/json
+```
+
+```json
+{
+  "name": "PortfolioBot",
+  "issuer_domain": "apexwealth.com",
+  "scopes": ["read:portfolio", "read:transactions"],
+  "description": "Reads portfolio data from financial APIs",
+  "expiry_seconds": 86400
+}
+```
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `name` | string | ✓ | Human-readable agent name |
+| `issuer_domain` | string | ✓ | Your domain — embedded in the token |
+| `scopes` | string[] | ✓ | What this agent is authorized to do |
+| `description` | string | — | Optional context |
+| `expiry_seconds` | number | — | Default: 86400 (24h). Max depends on plan. |
+
+## Response
+
+```json
+{
+  "agent_id": "agt_abc123",
+  "name": "PortfolioBot",
+  "issuer": "apexwealth.com",
+  "scopes": ["read:portfolio", "read:transactions"],
+  "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expires_at": "2026-03-27T18:00:00.000Z",
+  "verify_url": "https://api.imarobot.ai/v1/verify/eyJ...",
+  "public_key_url": "https://api.imarobot.ai/.well-known/public-key.pem"
+}
+```
+
+<Warning>
+The `token` is shown **exactly once** in this response. Store it securely — it cannot be recovered. If lost, issue a new token with `POST /v1/agents/:id/issue-token`.
+</Warning>
