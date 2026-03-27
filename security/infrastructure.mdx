@@ -1,0 +1,101 @@
+---
+title: "Infrastructure & Security"
+description: "How ImaRobot is built, where your data lives, and who processes it."
+---
+
+## Production Endpoints
+
+| Service | URL |
+|---|---|
+| API | `https://api.imarobot.ai` |
+| Developer Portal | `https://app.imarobot.ai` |
+| Docs | `https://docs.imarobot.ai` |
+
+---
+
+## Technology Stack
+
+### API
+- **Runtime:** Node.js 20 / Express
+- **Hosting:** [Railway](https://railway.app) — US region
+- **Authentication:** Bearer token (`sk_live_` / `sk_test_` / `pk_live_`), keys stored as SHA-256 hashes — plaintext never persisted
+- **Rate limiting:** Sliding window per API key and IP, tiered by plan
+- **Versioning:** All endpoints versioned under `/v1/`
+
+### Developer Portal
+- **Framework:** React + TypeScript, built with Vite
+- **Hosting:** Railway — US region
+- **Auth:** [Clerk](https://clerk.com) — SOC 2 Type II certified
+
+### Database
+- **Provider:** [Supabase](https://supabase.com) — PostgreSQL
+- **Security:** Row Level Security (RLS) enforced on all tables — every query is scoped to the requesting organization
+- **Region:** US East
+
+### DNS & CDN
+- **Provider:** [Cloudflare](https://cloudflare.com) — DNS, CDN, DDoS protection, TLS termination
+
+---
+
+## Sub-Processors
+
+ImaRobot uses the following third-party sub-processors to deliver the service:
+
+| Provider | Purpose | Data processed |
+|---|---|---|
+| [Railway](https://railway.app) | API & portal hosting | Code, logs, environment variables |
+| [Supabase](https://supabase.com) | Database | Organizations, users, agents, API keys, verification logs |
+| [Clerk](https://clerk.com) | User authentication | User identities, sessions |
+| [Stripe](https://stripe.com) | Billing & payments | Payment methods, subscription data |
+| [Resend](https://resend.com) | Transactional email | Email addresses, send history |
+| [Cloudflare](https://cloudflare.com) | CDN & DNS | Request logs (transient, not persisted) |
+| [Sentry](https://sentry.io) | Error tracking | Stack traces, request context (no PII) |
+| [PostHog](https://posthog.com) | Product analytics | Usage events, pageviews (anonymized) |
+
+---
+
+## Data Retention
+
+Log retention is determined by your plan:
+
+| Plan | Verification log retention |
+|---|---|
+| Free | 30 days |
+| Developer | 90 days |
+| Growth | 1 year |
+| Enterprise | Custom (negotiated) |
+
+You can request deletion of your data at any time by contacting [privacy@imarobot.ai](mailto:privacy@imarobot.ai).
+
+---
+
+## Security Practices
+
+- **API keys** — stored as SHA-256 hashes; the full key is shown once at creation and never again
+- **Agent tokens** — signed JWTs using RS256 with rotating key pairs
+- **TLS** — all traffic encrypted in transit via Cloudflare (TLS 1.2+)
+- **RLS** — database-level row isolation by organization; cross-tenant data access is structurally impossible
+- **Rate limiting** — all endpoints rate-limited by plan tier; no single key can exhaust shared resources
+
+### Roadmap
+- SOC 2 Type I — targeted Q3 2026
+- Biometric-bound approval flows — targeted Q3 2026
+
+---
+
+## GDPR & Privacy
+
+ImaRobot is GDPR-compliant. EU customers can:
+
+- **Access** their data — email [privacy@imarobot.ai](mailto:privacy@imarobot.ai)
+- **Delete** their data — we'll process deletion within 30 days
+- **Export** their data — available on request
+- **Object** to processing — contact us and we'll respond within 72 hours
+
+A Data Processing Agreement (DPA) is available for Growth and Enterprise customers. Contact [privacy@imarobot.ai](mailto:privacy@imarobot.ai) to request one.
+
+---
+
+## Questions?
+
+Security questions or vulnerability reports: [privacy@imarobot.ai](mailto:privacy@imarobot.ai)

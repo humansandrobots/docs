@@ -48,6 +48,17 @@
         ]
       },
       {
+        "tab": "Security",
+        "groups": [
+          {
+            "group": "Security & Compliance",
+            "pages": [
+              "security/infrastructure"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "API reference",
         "groups": [
           {
