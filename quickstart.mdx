@@ -1,18 +1,36 @@
 ---
 title: Quickstart
-description: Register your first agent and verify a token in under 5 minutes.
+description: Give your AI agent an identity and verify it — no domain required. Takes under 5 minutes.
 ---
 
 ## Before you start
 
 You'll need:
 - An ImaRobot account — [sign up free at app.imarobot.ai](https://app.imarobot.ai/signup)
-- Node.js 18+
 - An API key from [app.imarobot.ai/settings/api-keys](https://app.imarobot.ai/settings/api-keys)
+
+**You do NOT need a domain name.** Every ImaRobot account gets an auto-assigned issuer namespace like `yourname.agents.imarobot.ai`. Your agents are immediately verifiable.
 
 ---
 
-## Step 1: Register an agent
+## Choose your path
+
+<CardGroup cols={2}>
+  <Card title="🤖 Personal Agent / OpenClaw Skill" href="#personal-agent">
+    Building a hobby project, personal assistant, or OpenClaw skill? Start here — no domain needed.
+  </Card>
+  <Card title="🏢 Organization / Enterprise" href="#organization">
+    Building for a company or team? You can use your own domain as issuer.
+  </Card>
+</CardGroup>
+
+---
+
+## Personal Agent
+
+### Step 1: Register an agent
+
+No `issuer_domain` needed — ImaRobot auto-assigns your namespace (e.g., `yourname.agents.imarobot.ai`).
 
 ```bash
 curl -X POST https://api.imarobot.ai/v1/agents/register \
@@ -20,8 +38,7 @@ curl -X POST https://api.imarobot.ai/v1/agents/register \
   -H "Content-Type: application/json" \
   -d '{
     "name": "MyFirstAgent",
-    "issuer_domain": "yourdomain.com",
-    "scopes": ["read:data"]
+    "scopes": ["read:data", "write:data"]
   }'
 ```
 
@@ -31,17 +48,19 @@ curl -X POST https://api.imarobot.ai/v1/agents/register \
 {
   "agent_id": "agt_abc123",
   "name": "MyFirstAgent",
+  "issuer": "yourname.agents.imarobot.ai",
+  "scopes": ["read:data", "write:data"],
   "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "expires_at": "2026-03-27T18:00:00.000Z",
+  "expires_at": "2026-03-28T18:00:00.000Z",
   "verify_url": "https://api.imarobot.ai/v1/verify/eyJ..."
 }
 ```
 
-Save the `token` — it's only shown once at registration.
+Save the `token` — it's your agent's passport. Share the `verify_url` with anyone who needs to verify your agent.
 
----
+### Step 2: Verify the token
 
-## Step 2: Verify the token
+Anyone can verify your agent — no API key required:
 
 ```bash
 curl https://api.imarobot.ai/v1/verify/eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -54,11 +73,62 @@ curl https://api.imarobot.ai/v1/verify/eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
   "valid": true,
   "agent_id": "agt_abc123",
   "name": "MyFirstAgent",
-  "issuer": "imarobot.ai",
-  "scopes": ["read:data"],
-  "expires_at": "2026-03-27T18:00:00.000Z",
-  "verified_at": "2026-03-26T18:00:01.234Z"
+  "issuer": "yourname.agents.imarobot.ai",
+  "scopes": ["read:data", "write:data"],
+  "expires_at": "2026-03-28T18:00:00.000Z",
+  "verified_at": "2026-03-27T18:00:01.234Z"
 }
+```
+
+That's it — your agent has a verified identity. 🎉
+
+### Using the OpenClaw Skill
+
+If you're running OpenClaw, the ImaRobot skill makes this even easier:
+
+```bash
+# Register (issuer auto-assigned)
+node imarobot.js register --name "Rosie" --scopes "read,write"
+
+# Verify a token from another agent
+node imarobot.js verify eyJhbGci...
+
+# Check your agent's status
+node imarobot.js status
+```
+
+---
+
+## Organization
+
+For teams and companies, you can optionally use your own domain as issuer (requires Developer plan or above).
+
+### Step 1: Register an agent with your domain
+
+```bash
+curl -X POST https://api.imarobot.ai/v1/agents/register \
+  -H "Authorization: Bearer sk_test_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "SupportBot",
+    "issuer_domain": "yourcompany.com",
+    "scopes": ["read:tickets", "write:responses"],
+    "description": "Customer support automation agent"
+  }'
+```
+
+> **Don't have a domain yet?** No problem — just omit `issuer_domain` and your agent will be issued under `yourorg.agents.imarobot.ai`. You can verify a custom domain later.
+
+### Step 2: Verify your domain (optional, recommended)
+
+Add a DNS TXT record to prove you own the domain. See [Domain Verification](/guides/domain-verification) for details. Verified domains get a higher trust level in verification responses.
+
+### Step 3: Verify the token
+
+Same as personal agents — anyone can verify:
+
+```bash
+curl https://api.imarobot.ai/v1/verify/eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 ---
@@ -80,7 +150,7 @@ const { middleware } = createVerifier({
   publishableKey: 'pk_live_YOUR_KEY'
 });
 
-// Protect any route
+// Protect any route — only verified agents can access
 app.get('/api/data', middleware(), (req, res) => {
   const { agentId, scopes } = req.agent;
   res.json({ message: `Hello, agent ${agentId}` });
@@ -91,7 +161,7 @@ Every request to `/api/data` now requires a valid ImaRobot token. Invalid or rev
 
 ---
 
-## Step 4: Revoke the agent
+## Step 4: Revoke when needed
 
 ```bash
 curl -X POST https://api.imarobot.ai/v1/agents/agt_abc123/revoke \
@@ -100,7 +170,7 @@ curl -X POST https://api.imarobot.ai/v1/agents/agt_abc123/revoke \
   -d '{ "reason": "Credential rotation" }'
 ```
 
-Verify the same token again — it now returns:
+Revocation is immediate — no cache lag. Verify the same token again and it returns:
 
 ```json
 {
@@ -109,7 +179,19 @@ Verify the same token again — it now returns:
 }
 ```
 
-Revocation is immediate. No cache lag.
+---
+
+## Your issuer namespace
+
+Every ImaRobot account gets an auto-assigned namespace:
+
+| Account type | Issuer format | Example |
+|---|---|---|
+| Personal / Free | `{username}.agents.imarobot.ai` | `rosie.agents.imarobot.ai` |
+| Organization | `{org-name}.agents.imarobot.ai` | `acme-corp.agents.imarobot.ai` |
+| Custom domain (Developer+) | `yourdomain.com` | `acme.com` |
+
+Want to use your own domain? [Upgrade to Developer](https://app.imarobot.ai/pricing) and verify it in Settings.
 
 ---
 
